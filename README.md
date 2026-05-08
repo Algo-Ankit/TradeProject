@@ -71,34 +71,49 @@ The infrastructure includes a high-fidelity backtesting engine designed to elimi
 *   Kite Connect / Shoonya API Credentials
 *   Minimum 8GB RAM for ClickHouse/Kafka stack
 
-### 5.2 Infrastructure Initialization
-Bootstrap the distributed services using the provided orchestration script:
+### 5.2 Infrastructure Initialization (The "Big Three")
+The system relies on three primary distributed services. These are **fully containerized** via Docker—you do not need to install Redis, Kafka, or ClickHouse directly on your host machine.
+
+Run the bootstrap script to pull and initialize the stack:
 ```powershell
 ./scripts/bootstrap.sh
 ```
-This command initializes:
-1.  **ClickHouse**: Schema creation for `ticks`, `features`, `fills`, and `pnl_snapshots`.
-2.  **Kafka**: Topic creation with optimized partitions and retention policies.
-3.  **Redis**: Configuration for persistence and eviction.
-
-### 5.3 Configuration Management
-The system utilizes a hierarchical configuration model:
-1.  `config/system.yaml`: Global operational parameters (Logging, Timezones, Paper Mode).
-2.  `config/instruments.yaml`: Static universe definition and exchange settings.
-3.  `config/secrets.env`: Protected credentials (API keys, DB passwords).
-
-### 5.4 Launch Sequence
-1.  **Ingestion**: Start data feeds to populate Kafka/ClickHouse.
-2.  **Feature Pipeline**: Launch the calculator service to process ticks.
-3.  **Risk/Strategy**: Initialize the risk monitor followed by specific strategy modules.
-4.  **Dashboard**: Launch the Streamlit interface for live PnL and risk oversight:
-    ```bash
-    streamlit run monitoring/dashboard/app.py
-    ```
+This command manages the lifecycle of:
+*   **Redis**: (Port 6379) - Used for real-time state and risk tracking.
+*   **Kafka**: (Port 9092) - High-throughput tick distribution.
+*   **ClickHouse**: (Port 8123/9000) - Analytical storage for historical research.
 
 ---
 
-## 6. Directory Structure Overview
+## 6. Execution Guide
+
+This section provides the exact commands required to operate the system.
+
+### 6.1 Data Preparation (ETL)
+To populate the analytical database with historical NSE data for backtesting:
+```bash
+# Downloads and loads Bhavcopy data into ClickHouse
+python scripts/backfill.py --from 2024-01-01 --to 2024-12-31
+```
+
+### 6.2 Research & Strategy Validation
+To execute a backtest for the Statistical Arbitrage strategy:
+```bash
+# Runs the event-driven simulator and generates a performance report
+python scripts/run_backtest.py --months 6 --symbols RELIANCE,TCS,HDFCBANK,INFY
+```
+*Output: `reports/backtest.html`*
+
+### 6.3 Real-Time Monitoring
+To launch the institutional-grade dashboard for PnL and Risk oversight:
+```bash
+# Requires Redis to be running via Step 5.2
+streamlit run monitoring/dashboard/app.py
+```
+
+---
+
+## 7. Directory Structure Overview
 
 ```text
 trading-system/
