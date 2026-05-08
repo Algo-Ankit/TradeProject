@@ -50,43 +50,67 @@ trading-system/
 └── tests/              # Comprehensive unit and integration tests
 ```
 
-## ⚙️ Setup & Installation
+## ⚙️ Getting Started (Step-by-Step)
 
-### 1. Prerequisites
-- Docker & Docker Compose
-- Python 3.11+
-- [Kite Connect API](https://kite.trade/) / [Shoonya API](https://prism.shoonya.com/) credentials
+Follow these steps to get the trading system up and running on your local machine.
 
-### 2. Infrastructure Setup
-Use the provided bootstrap script to start ClickHouse, Kafka, and Redis:
+### Step 1: Clone the Repository
 ```bash
-bash scripts/bootstrap.sh
+git clone https://github.com/Algo-Ankit/TradeProject.git
+cd TradeProject
 ```
 
-### 3. Python Environment
+### Step 2: Infrastructure Setup (Docker)
+The system requires ClickHouse, Kafka, and Redis. We provide a bootstrap script to automate this:
 ```bash
+# Ensure Docker Desktop is running
+bash scripts/bootstrap.sh
+```
+*This script will start the containers, initialize the ClickHouse schema, and create the necessary Kafka topics.*
+
+### Step 3: Python Environment Setup
+We recommend using a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Configuration
-1. Copy `config/secrets.env.template` to `config/secrets.env`.
-2. Fill in your API keys and database credentials.
+### Step 4: Configuration & Secrets
+1. Navigate to the `config/` directory.
+2. Copy the template: `cp config/secrets.env.template config/secrets.env` (or manually rename it).
+3. Open `config/secrets.env` and enter your credentials:
+    - **Zerodha**: API Key, Secret, and Access Token.
+    - **Shoonya**: User, Password, TOTP Secret, etc.
+    - **Telegram**: Bot Token and Chat ID (for live alerts).
 
-## 📈 Usage
-
-### Backfilling Data
+### Step 5: Data Backfilling (Historical Data)
+Before running a backtest, you need some data in ClickHouse:
 ```bash
+# Backfill NSE Bhavcopy data for the year 2024
 python scripts/backfill.py --from 2024-01-01 --to 2024-12-31
 ```
 
-### Running Backtests
-```bash
-python scripts/run_backtest.py --months 6 --symbols RELIANCE,TCS,INFY
-```
+## 📈 Launching the System
 
-### Starting the Live Dashboard
+### 1. Run a Backtest
+Validate the StatArb strategy on historical data:
+```bash
+python scripts/run_backtest.py --months 6 --symbols RELIANCE,TCS,INFY,ICICIBANK
+```
+*An HTML report will be generated in the `reports/` folder.*
+
+### 2. Launch the Live Dashboard
+Monitor PnL, positions, and signals in real-time:
 ```bash
 streamlit run monitoring/dashboard/app.py
+```
+
+### 3. Execution & Strategy (Live/Paper)
+Ensure `system.yaml` is configured for `paper_mode: true` for testing without real money.
+```bash
+# Standard entry point (implementation varies based on your main orchestrator)
+# python main.py 
 ```
 
 ## 🛡️ License
