@@ -1,117 +1,126 @@
-# Production-Grade Systematic Algorithmic Trading System
+# Systematic Algorithmic Trading Infrastructure (NSE India)
 
-A high-performance, event-driven algorithmic trading system designed for the National Stock Exchange (NSE) of India. This system integrates real-time data ingestion, advanced feature engineering, multi-strategy execution, and rigorous risk management.
+## Technical Specification & Operational Documentation
 
-## Features
+This repository contains a production-grade, low-latency algorithmic trading infrastructure optimized for the National Stock Exchange (NSE) of India. The system is architected as an event-driven distributed system, integrating institutional-grade risk controls, multi-asset quantitative strategies, and a high-fidelity research environment.
 
-- **Live Data Ingestion**: Multi-broker support for Zerodha (Kite Connect) and Shoonya (NorenAPI) with automated reconnection and heartbeat monitoring.
-- **Advanced Feature Engineering**: 
-    - **Microstructure**: Order Flow Imbalance (OFI), VPIN, Bid-Ask Spread dynamics, Microprice.
-    - **Options**: Real-time Greeks calculation (Delta, Gamma, Vega, Theta) and Implied Volatility (IV) surface analysis.
-    - **Statistical**: Parkinson Volatility, Regime Detection via Hidden Markov Models (HMM), Momentum Z-scores.
-- **Multi-Strategy Architecture**:
-    - **StatArb**: Pairs trading with Kalman Filter-based dynamic hedge ratios and cointegration testing.
-    - **ML Directional**: Directional predictors using LightGBM/ONNX models with Walk-Forward validation.
-    - **Options RV**: Relative Value scanning for Volatility Arbitrage.
-- **Execution Engine**: Smart order routing, slicing for large orders, and passive-to-market order upgrades.
-- **Risk Management**:
-    - **Pre-Trade**: Order-level limits, Buying Power checks, ADV-based volume limits.
-    - **Real-Time**: Portfolio drawdown monitoring, exposure limits, and an automated Kill Switch.
-- **Infrastructure**:
-    - **ClickHouse**: Time-series storage for ticks, features, and trade logs.
-    - **Kafka**: High-throughput message bus for inter-module communication.
-    - **Redis**: Low-latency state management for live positions and features.
-- **Monitoring**: Real-time Streamlit dashboard for PnL, risk utilization, and signal heatmaps.
+---
 
-## 🛠️ Tech Stack
+## 1. System Architecture
 
-- **Language**: Python 3.11+
-- **Data Processing**: Polars, NumPy, SciPy
-- **Machine Learning**: LightGBM, ONNX, Scikit-learn
-- **Storage**: ClickHouse, Redis
-- **Messaging**: Apache Kafka
-- **Visualization**: Streamlit, Plotly
+The infrastructure follows a decoupled, event-driven architecture designed for high throughput and fault tolerance.
 
-## 📂 Project Structure
+### 1.1 Core Components
+*   **Event Orchestration**: A central `EventBus` facilitates asynchronous communication between data feeds, strategy engines, and execution clients using `asyncio` for non-blocking I/O.
+*   **Data Ingestion Layer**: Multi-threaded WebSocket consumers for Zerodha (Kite) and Shoonya (Noren), featuring automated failover and tick-level quality validation.
+*   **Persistence Layer**: 
+    *   **OLAP (ClickHouse)**: High-performance time-series storage for multi-year tick data, feature logs, and execution traces.
+    *   **State (Redis)**: Low-latency in-memory store for real-time positions, feature states, and risk utilization metrics.
+*   **Message Broker (Kafka)**: Decouples high-volume raw ticks from downstream feature computation and monitoring services.
+
+### 1.2 Quantitative Framework
+*   **Microstructure Features**: Real-time calculation of Order Flow Imbalance (OFI), Volume-Synchronized Probability of Informed Trading (VPIN), and Microprice dynamics.
+*   **Options Engine**: High-performance Greeks calculation (Delta, Gamma, Vega, Theta) and IV surface calibration using Black-Scholes and Heston model abstractions.
+*   **Regime Detection**: Statistical regime identification using Gaussian Hidden Markov Models (HMM) to adapt strategy parameters to market volatility states.
+
+---
+
+## 2. Risk Management & Compliance
+
+The system implements a multi-layered safety framework to ensure capital preservation and regulatory compliance.
+
+### 2.1 Pre-Trade Control Layer
+Every signal must pass through the `PreTradeChecker` which validates:
+*   **Order Size Limits**: Maximum INR value per clip.
+*   **Liquidity Constraints**: Order-to-ADV (Average Daily Volume) percentage limits.
+*   **Buying Power**: Real-time margin utilization checks against broker-reported capital.
+
+### 2.2 Real-Time Risk Monitor
+*   **Portfolio Drawdown**: Automated kill-switch activation if peak-to-trough drawdown exceeds defined thresholds.
+*   **Exposure Management**: Gross and net exposure limits tracked across all sub-strategies.
+*   **Kill Switch**: A global safety mechanism that cancels all pending orders and flattens active positions across all legs upon breach.
+
+---
+
+## 3. Execution Logic
+
+The execution layer abstracts broker-specific APIs into a unified interface, supporting sophisticated routing logic.
+
+*   **Smart Executor**: Implements order slicing (Time-Weighted or Volume-Weighted style) to minimize market impact.
+*   **Passive-to-Active Upgrades**: Automated limit order management that upgrades to market execution if fill-latency exceeds specified timeouts.
+*   **Slippage Profiling**: Detailed tracking of expected vs. realized fill prices to optimize execution parameters.
+
+---
+
+## 4. Research & Backtesting
+
+The infrastructure includes a high-fidelity backtesting engine designed to eliminate look-ahead bias and simulate realistic market conditions.
+
+*   **Engine**: Event-driven simulator that processes historical ClickHouse data as if it were a live feed.
+*   **Fill Model**: Incorporates market impact (using Square-root impact models) and variable slippage based on depth-at-best.
+*   **Validation**: Implementation of the **Deflated Sharpe Ratio (DSR)** to account for multiple testing bias and reduce the probability of false discoveries.
+*   **Walk-Forward**: Automated runner for out-of-sample validation and parameter stability testing.
+
+---
+
+## 5. Operational Deployment
+
+### 5.1 Prerequisites
+*   Linux/Windows (Docker-enabled)
+*   Python 3.11+
+*   Kite Connect / Shoonya API Credentials
+*   Minimum 8GB RAM for ClickHouse/Kafka stack
+
+### 5.2 Infrastructure Initialization
+Bootstrap the distributed services using the provided orchestration script:
+```powershell
+./scripts/bootstrap.sh
+```
+This command initializes:
+1.  **ClickHouse**: Schema creation for `ticks`, `features`, `fills`, and `pnl_snapshots`.
+2.  **Kafka**: Topic creation with optimized partitions and retention policies.
+3.  **Redis**: Configuration for persistence and eviction.
+
+### 5.3 Configuration Management
+The system utilizes a hierarchical configuration model:
+1.  `config/system.yaml`: Global operational parameters (Logging, Timezones, Paper Mode).
+2.  `config/instruments.yaml`: Static universe definition and exchange settings.
+3.  `config/secrets.env`: Protected credentials (API keys, DB passwords).
+
+### 5.4 Launch Sequence
+1.  **Ingestion**: Start data feeds to populate Kafka/ClickHouse.
+2.  **Feature Pipeline**: Launch the calculator service to process ticks.
+3.  **Risk/Strategy**: Initialize the risk monitor followed by specific strategy modules.
+4.  **Dashboard**: Launch the Streamlit interface for live PnL and risk oversight:
+    ```bash
+    streamlit run monitoring/dashboard/app.py
+    ```
+
+---
+
+## 6. Directory Structure Overview
 
 ```text
 trading-system/
-├── config/             # YAML configurations and secrets templates
-├── core/               # Event bus, market clock, and base configurations
-├── data/               # Ingestion feeds, quality validation, and storage writers
-├── execution/          # Broker clients and smart execution logic
-├── features/           # Feature pipeline and mathematical calculators
-├── infra/              # Docker Compose for ClickHouse, Kafka, Redis
-├── monitoring/         # Streamlit dashboard and alerting bots
-├── research/           # Backtester engine and performance reporting
-├── risk/               # Pre-trade and real-time risk managers
-├── scripts/            # Bootstrap and backfill utilities
-├── strategies/         # Strategy implementations (StatArb, ML, Options)
-└── tests/              # Comprehensive unit and integration tests
+├── core/               # System kernel: EventBus, MarketClock, AppConfig
+├── data/               # Ingestion: Feed clients, Quality Validators, Storage Drivers
+├── execution/          # OMS: Broker abstractions, Order Managers, Smart Exec
+├── features/           # Alpha: Pipeline, Microstructure, Greeks, Stats
+├── infra/              # DevOps: Docker, SQL Init, Kafka Config
+├── monitoring/         # Ops: Telegram Alerters, Streamlit Dashboard
+├── research/           # Analytics: Backtester, Performance Metrics, DSR Validation
+├── risk/               # Safety: Pre-Trade, Real-Time Monitoring, Kill Switch
+├── strategies/         # Quant: StatArb, ML Directional, Options RV
+└── scripts/            # Utils: Bootstrap, Data Backfill, Backtest Runners
 ```
 
-## ⚙️ Getting Started (Step-by-Step)
+---
 
-Follow these steps to get the trading system up and running on your local machine.
-
-### Step 1: Clone the Repository
+## 7. Development & Testing
+Unit tests are mandatory for all core components. The suite covers data validation, mathematical greeks, and event-bus integrity.
 ```bash
-git clone https://github.com/Algo-Ankit/TradeProject.git
-cd TradeProject
+pytest tests/
 ```
 
-### Step 2: Infrastructure Setup (Docker)
-The system requires ClickHouse, Kafka, and Redis. We provide a bootstrap script to automate this:
-```bash
-# Ensure Docker Desktop is running
-bash scripts/bootstrap.sh
-```
-*This script will start the containers, initialize the ClickHouse schema, and create the necessary Kafka topics.*
-
-### Step 3: Python Environment Setup
-We recommend using a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### Step 4: Configuration & Secrets
-1. Navigate to the `config/` directory.
-2. Copy the template: `cp config/secrets.env.template config/secrets.env` (or manually rename it).
-3. Open `config/secrets.env` and enter your credentials:
-    - **Zerodha**: API Key, Secret, and Access Token.
-    - **Shoonya**: User, Password, TOTP Secret, etc.
-    - **Telegram**: Bot Token and Chat ID (for live alerts).
-
-### Step 5: Data Backfilling (Historical Data)
-Before running a backtest, you need some data in ClickHouse:
-```bash
-# Backfill NSE Bhavcopy data for the year 2024
-python scripts/backfill.py --from 2024-01-01 --to 2024-12-31
-```
-
-## 📈 Launching the System
-
-### 1. Run a Backtest
-Validate the StatArb strategy on historical data:
-```bash
-python scripts/run_backtest.py --months 6 --symbols RELIANCE,TCS,INFY,ICICIBANK
-```
-*An HTML report will be generated in the `reports/` folder.*
-
-### 2. Launch the Live Dashboard
-Monitor PnL, positions, and signals in real-time:
-```bash
-streamlit run monitoring/dashboard/app.py
-```
-
-### 3. Execution & Strategy (Live/Paper)
-Ensure `system.yaml` is configured for `paper_mode: true` for testing without real money.
-```bash
-# Standard entry point (implementation varies based on your main orchestrator)
-# python main.py 
-```
-
-## 🛡️ License
-Proprietary. Developed by [Ankit Anand Singh](https://github.com/Algo-Ankit).
+---
+*Disclaimer: This software is for institutional research and trading purposes. Use at your own risk. The developers assume no liability for financial losses.*
