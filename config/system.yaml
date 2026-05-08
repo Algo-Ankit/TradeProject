@@ -1,0 +1,54 @@
+system:
+  paper_mode: true
+  log_level: INFO
+  timezone: Asia/Kolkata
+
+broker:
+  primary: zerodha
+  secondary: shoonya
+
+data:
+  tick_buffer_size: 10000
+  clickhouse_flush_interval_seconds: 5
+  clickhouse_flush_batch_size: 1000
+  stale_tick_threshold_seconds: 5
+
+features:
+  computation_interval_seconds: 1
+  vpin_bucket_count: 50
+  regime_retrain_time: "09:00"
+
+risk:
+  portfolio:
+    max_daily_drawdown_pct: 5.0
+    max_gross_exposure_inr: 2000000
+    max_net_exposure_pct: 30
+  per_strategy:
+    stat_arb:
+      max_daily_drawdown_pct: 2.0
+      max_position_inr: 500000
+      max_open_pairs: 8
+      entry_zscore: 2.0
+      exit_zscore: 0.5
+      stop_zscore: 3.5
+    ml_directional:
+      max_daily_drawdown_pct: 1.5
+      max_position_inr: 300000
+      min_model_confidence: 0.62
+    options_rv:
+      max_daily_drawdown_pct: 1.0
+      max_net_delta: 50
+      max_net_gamma: 20
+  pre_trade:
+    max_single_order_inr: 100000
+    max_order_to_adv_pct: 1.0
+    min_buying_power_buffer_pct: 20
+  execution:
+    passive_timeout_seconds: 30
+    max_slippage_bps: 10
+
+monitoring:
+  pnl_update_interval_seconds: 5
+  signal_heatmap_update_seconds: 30
+  latency_alert_p99_ms: 500
+  risk_alert_threshold_pct: 90

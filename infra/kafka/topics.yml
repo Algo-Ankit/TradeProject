@@ -1,0 +1,47 @@
+topics:
+  - name: raw-ticks
+    partitions: 8
+    replication_factor: 1
+    config:
+      retention.ms: 86400000      # 1 day
+      segment.bytes: 104857600    # 100MB
+      compression.type: lz4
+
+  - name: order-book
+    partitions: 8
+    replication_factor: 1
+    config:
+      retention.ms: 86400000
+      segment.bytes: 104857600
+      compression.type: lz4
+
+  - name: features
+    partitions: 4
+    replication_factor: 1
+    config:
+      retention.ms: 3600000       # 1 hour
+      compression.type: lz4
+
+  - name: orders
+    partitions: 2
+    replication_factor: 1
+    config:
+      retention.ms: 604800000     # 7 days
+
+  - name: fills
+    partitions: 2
+    replication_factor: 1
+    config:
+      retention.ms: 604800000
+
+  - name: risk-events
+    partitions: 1
+    replication_factor: 1
+    config:
+      retention.ms: 604800000
+
+  - name: signals
+    partitions: 4
+    replication_factor: 1
+    config:
+      retention.ms: 3600000

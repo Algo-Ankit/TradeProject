@@ -1,0 +1,125 @@
+holidays:
+  - "2024-01-22"
+  - "2024-03-25"
+  - "2024-03-29"
+  - "2024-04-14"
+  - "2024-04-17"
+  - "2024-04-21"
+  - "2024-05-23"
+  - "2024-06-17"
+  - "2024-07-17"
+  - "2024-08-15"
+  - "2024-10-02"
+  - "2024-10-13"
+  - "2024-11-01"
+  - "2024-11-15"
+  - "2024-11-20"
+  - "2024-12-25"
+  - "2025-02-26"
+  - "2025-03-14"
+  - "2025-03-31"
+  - "2025-04-10"
+  - "2025-04-14"
+  - "2025-04-18"
+  - "2025-05-01"
+  - "2025-08-15"
+  - "2025-10-02"
+  - "2025-10-20"
+  - "2025-10-21"
+  - "2025-11-05"
+  - "2025-12-25"
+
+instruments:
+  - symbol: RELIANCE
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 738561
+  - symbol: TCS
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 2953217
+  - symbol: HDFCBANK
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 341249
+  - symbol: INFY
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 408065
+  - symbol: ICICIBANK
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 1270529
+  - symbol: WIPRO
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 969633
+  - symbol: HINDUNILVR
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 356865
+  - symbol: SBIN
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 779521
+  - symbol: BAJFINANCE
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 81153
+  - symbol: KOTAKBANK
+    exchange: NSE
+    type: EQUITY
+    lot_size: 1
+    tick_size: 0.05
+    zerodha_token: 492033
+  - symbol: NIFTY50
+    exchange: NSE
+    type: INDEX
+    lot_size: 50
+    tick_size: 0.05
+    zerodha_token: 256265
+  - symbol: BANKNIFTY
+    exchange: NSE
+    type: INDEX
+    lot_size: 15
+    tick_size: 0.05
+    zerodha_token: 260105
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topics:
+    raw_ticks: raw-ticks
+    order_book: order-book
+    features: features
+    orders: orders
+    fills: fills
+    risk_events: risk-events
+    signals: signals
+
+clickhouse:
+  database: trading
+  tables:
+    ticks: ticks
+    order_book: order_book
+    features: features
+    fills: fills
+    pnl_snapshots: pnl_snapshots
+    orders: orders
