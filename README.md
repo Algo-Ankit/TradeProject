@@ -2,7 +2,7 @@
 
 A high-performance, event-driven algorithmic trading system designed for the National Stock Exchange (NSE) of India. This system integrates real-time data ingestion, advanced feature engineering, multi-strategy execution, and rigorous risk management.
 
-## 🚀 Features
+## Features
 
 - **Live Data Ingestion**: Multi-broker support for Zerodha (Kite Connect) and Shoonya (NorenAPI) with automated reconnection and heartbeat monitoring.
 - **Advanced Feature Engineering**: 
